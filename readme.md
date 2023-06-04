@@ -1,6 +1,6 @@
 # Mymock
 
-一个可以mock数据的typescript库，可以生成各种类型的随机数据，包括但不限于数字、字符串、日期、布尔值、数组、对象等（用于练手的）。
+一个可以mock数据的typescript库，可以生成各种类型的随机数据，包括但不限于数字、字符串、日期、布尔值、数组、对象等（用于练手）。
 
 # 使用方法
 
@@ -71,7 +71,7 @@ mock.template(’time|12:00:00‘)
 mock.template(’time|12:00:00|23:59:59|HH:mm:ss‘)
 ```
 
-### 
+
 
 ## 复杂数据类型
 
@@ -84,6 +84,7 @@ mock.template({
     generator: 'number|0~100',
     length: 10
 })
+// 输出 [1,27,12,7,23,89,45,21,76,43]
 ```
 
 
@@ -91,13 +92,7 @@ mock.template({
 ### 对象
 
 ```js
-// 生成一个对象如 
-//{
-//	name: 'dasdqweras',
-//    company: {
-//        address: 'asxzcqwdqwd'
-//    }
-//}
+// 生成一个对象
 mock.template({
 	type: 'object',
     properties: {
@@ -110,5 +105,117 @@ mock.template({
     	}
     }
 })
+// 输出
+//{
+//	name: 'dasdqweras',
+//    company: {
+//        address: 'asxzcqwdqwd'
+//    }
+//}
+```
+
+
+
+## 扩展mock逻辑
+
+### 生成UUID
+
+```js
+// 注册扩展
+mock.extend('uuid', () => {
+	let d = new Date().getTime();
+	if (window.performance && typeof window.performance.now === "function") {
+    	d += performance.now(); // use high-precision timer if available
+  	}
+  	let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    	let r = (d + Math.random() * 16) % 16 | 0;
+    	d = Math.floor(d / 16);
+    	return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  	});
+  	return uuid;
+})
+// 使用
+mock.template('uuid') // a2c429f7-7eb9-483b-8f3f-b8065889d4d1
+mock.template({
+    type: 'object',
+    properties: {
+        name: 'uuid',
+    }
+})
+// {
+//     name: a2c429f7-7eb9-483b-8f3f-b8065889d4d1
+// } 
+```
+
+
+
+### 生成身份证号码
+
+```js
+// 注册扩展
+mock.extend('idcard', () => {
+    // 随机生成地区代码（前6位数字）
+    let areaCode = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+    // 随机生成出生日期（8位数字）
+    let birthYear = Math.floor(Math.random() * (2015 - 1950 + 1)) + 1950;
+    let birthMonth = Math.floor(Math.random() * 12) + 1;
+    if (birthMonth < 10) {
+        birthMonth = '0' + birthMonth;
+    }
+    let birthDay = Math.floor(Math.random() * 28) + 1;
+    if (birthDay < 10) {
+        birthDay = '0' + birthDay;
+    }
+    let birthday = '' + birthYear + birthMonth + birthDay;
+    // 随机生成顺序码（3位数字）
+    let orderCode = Math.floor(Math.random() * (999 - 100 + 1)) + 100;
+    // 计算校验码
+    let idNumber = '' + areaCode + birthday + orderCode;
+    let idArray = idNumber.split('');
+    let idWeight = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    let idCheckCode = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+    let sum = 0;
+    for (let i = 0; i < idArray.length; i++) {
+        sum += idArray[i] * idWeight[i];
+    }
+    let remainder = sum % 11;
+    let checkCode = idCheckCode[remainder];
+    // 生成身份证号码并返回
+    return '' + areaCode + birthday + orderCode + checkCode;
+})
+
+// 使用
+mock.template('idcard') // 142085200409262114
+mock.template({
+    type: 'object',
+    properties: {
+        idcard: 'idcard',
+    }
+})
+// {
+//     idcard: 723583199208069690
+// } 
+```
+
+
+
+## 扩展字符集
+
+默认包含，小写、大写、标点符号、中文4种字符集，支持拓展新的字符集
+
+```js
+// 注册新的字符集
+mock.extendsCharPools('japaniese', 'おはようございます')
+// 使用mock生成日文
+mock.template('string|10|japaniese') // おはいますようござう
+mock.template({
+    type: 'object',
+    properties: {
+        name: 'string|10|japaniese',
+    }
+})
+// {
+//     name: おはいますようござう
+// } 
 ```
 
