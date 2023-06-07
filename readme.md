@@ -12,11 +12,11 @@
 
 ```js
 // 生成0-100自然数
-mock.template('number|0~100')
+mock.template('number|0|100')
 // 生成0-100的小数 保留小数点后两位
-mock.template('number|0~100.2')
+mock.template('number|0|100|2')
 // 生成-100到0的整数
-mock.template('number|-100~0')
+mock.template('number|-100|0')
 ```
 
 ### 字符串
@@ -41,34 +41,30 @@ mock.template('string|50|symbol.chinese')
 ```js
 // 以50%的概率生成true和false
 mock.template('boolean')
-// 以75%的概率生成true
-mock.template('boolean|75')
+// 以10%的概率生成true
+mock.template('boolean|0.1')
 ```
 
 ### 日期
 
-语法：'date|开始范围|结束范围|格式'
+语法：'date|占位符'
 
 ```js
-// 以1970-01-01到今天为范围生成随机日期
-mock.template('date|1970-01-01|now')
-// 以2000-01-01到2100-01-01为范围生成随机日期
-mock.template('date|2000-01-01|2100-01-01')
-// 以1970-01-01到今天为范围生成随机日期, 格式为YYYY:MM:DD
-mock.template('date|2000-01-01|2100-01-01|YYYY:MM:DD')
+// 生成随机日期, 格式为YYYY-MM-DD
+mock.template('date')
+// 生成随机日期, 格式为YYYY:MM:DD
+mock.template('date|YYYY:MM:DD')
 ```
 
 ### 时间
 
-语法：'time|开始范围|结束范围|格式'
+语法：'time|占位符'
 
 ```js
-// 以24小时为范围生成随机时间，格式为hh:mm:ss
-mock.template(’time‘)
-// 生成12到24点的随机时间，格式为hh:mm:ss
-mock.template(’time|12:00:00‘)
-// 生成12到24点的随机时间，格式为HH:mm:ss
-mock.template(’time|12:00:00|23:59:59|HH:mm:ss‘)
+// 生成随机日期, 格式为hh:mm:ss
+mock.template('time')
+// 生成随机日期, 格式为HH:mm:ss
+mock.template('time|HH:mm:ss')
 ```
 
 
