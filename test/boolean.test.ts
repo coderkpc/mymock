@@ -1,29 +1,30 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { generateRandomBoolean } from '../src/utils';
 
-describe('generateRandomBoolean', () => {
-    it('should generate a random boolean with the specified probability', () => {
-        const result1 = generateRandomBoolean(0.5);
-        const result2 = generateRandomBoolean(0.1);
-        const result3 = generateRandomBoolean(0.9);
-        const result4 = generateRandomBoolean(1);
-
-        expect(typeof result1).toBe('boolean');
-        expect(typeof result2).toBe('boolean');
-        expect(typeof result3).toBe('boolean');
-        expect(typeof result4).toBe('boolean');
+describe('生成随机布尔值', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+    it('默认以50%的概率生成true或false', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0.49);
+        expect(generateRandomBoolean({})).toBe(true);
+        vi.spyOn(Math, 'random').mockReturnValue(0.51);
+        expect(generateRandomBoolean({})).toBe(false);
+        vi.spyOn(Math, 'random').mockRestore();
+        expect(typeof generateRandomBoolean({})).toBe('boolean');
     });
 
-    it('should generate a random boolean with the default probability (0.5)', () => {
-        const result = generateRandomBoolean();
-
-        expect(typeof result).toBe('boolean');
+    it('生成70%概率为true的随机布尔值', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0.71);
+        expect(generateRandomBoolean({ prob: 0.7 })).toBe(false);
+        vi.spyOn(Math, 'random').mockReturnValue(0.69);
+        expect(generateRandomBoolean({ prob: 0.7 })).toBe(true);
     });
 
-    it('should throw an error when probability is not a number or not between 0 and 1', () => {
-        expect(() => generateRandomBoolean(-0.5)).toThrowError('概率必须是0-1之间的数字');
-        expect(() => generateRandomBoolean(1.5)).toThrowError('概率必须是0-1之间的数字');
+    it('传入大于1或小于0的数字、字符串，抛出异常', () => {
+        expect(() => generateRandomBoolean({ prob: -0.5 })).toThrowError('概率必须是0-1之间的数字');
+        expect(() => generateRandomBoolean({ prob: 1.5 })).toThrowError('概率必须是0-1之间的数字');
         // @ts-ignore
-        expect(() => generateRandomBoolean('0.5')).toThrowError('概率必须是0-1之间的数字');
+        expect(() => generateRandomBoolean({ prob: '0.5' })).toThrowError('概率必须是0-1之间的数字');
     });
 });

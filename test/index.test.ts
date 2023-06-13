@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Mock from '../src';
-import { MockOptions } from 'src/types';
+import { MockOptions } from '../src/types';
 import { isInteger, isNumber } from 'lodash-es';
+import { DefaultCharPools, DefaultMockFunction, generateRandomNumber, parse } from '../src/utils';
 
 describe('Mock', () => {
     let mock: Mock;
@@ -10,14 +11,14 @@ describe('Mock', () => {
         mock = new Mock();
     });
 
-    describe('extendsCharPools', () => {
+    describe('扩展默认字符集', () => {
         it('扩展默认字符集', () => {
             mock.extendsCharPools({
                 lower: 'abc',
                 zh_cn: '中文',
             });
 
-            expect(mock.CharPools).toEqual({
+            expect(mock.charPools).toEqual({
                 lower: 'abc',
                 upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                 number: '0123456789',
@@ -27,7 +28,7 @@ describe('Mock', () => {
         });
     });
 
-    describe('extend', () => {
+    describe('扩展mock方法', () => {
         it('扩展mock方法', () => {
             const customFn = vi.fn();
             mock.extend('custom', customFn);
@@ -49,10 +50,10 @@ describe('Mock', () => {
         });
     });
 
-    describe('parse', () => {
+    describe('解析模板', () => {
         it('将模板解析成生成数字的参数', () => {
             const template = 'number|1|100|2';
-            const parsed = mock.parse(template);
+            const parsed = parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools });
 
             expect(parsed).toEqual({
                 type: 'number',
@@ -66,7 +67,7 @@ describe('Mock', () => {
 
         it('将模板解析成生成字符串的参数', () => {
             const template = 'string|5|lower';
-            const parsed = mock.parse(template);
+            const parsed = parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools });
 
             expect(parsed).toEqual({
                 type: 'string',
@@ -79,7 +80,7 @@ describe('Mock', () => {
 
         it('将模板解析成生成布尔值的参数', () => {
             const template = 'boolean|0.5';
-            const parsed = mock.parse(template);
+            const parsed = parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools });
 
             expect(parsed).toEqual({
                 type: 'boolean',
@@ -91,7 +92,7 @@ describe('Mock', () => {
 
         it('将模板解析成生成日期的参数', () => {
             const template = 'date|yyyy-MM-dd';
-            const parsed = mock.parse(template);
+            const parsed = parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools });
 
             expect(parsed).toEqual({
                 type: 'date',
@@ -103,7 +104,7 @@ describe('Mock', () => {
 
         it('将模板解析成生成时间的参数', () => {
             const template = 'time|HH:mm:ss';
-            const parsed = mock.parse(template);
+            const parsed = parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools });
 
             expect(parsed).toEqual({
                 type: 'time',
@@ -115,11 +116,13 @@ describe('Mock', () => {
 
         it('解析模板时传入非法模板', () => {
             const template = 'invalid|template';
-            expect(() => mock.parse(template)).toThrowError('Invalid template');
+            expect(() => parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools })).toThrowError(
+                'Invalid template',
+            );
         });
     });
 
-    describe('template', () => {
+    describe('对外暴露的mock入口', () => {
         describe('基本类型', () => {
             describe('数字类型', () => {
                 it('使用模板mock生成1-100的浮点数，保留两位', () => {
@@ -155,15 +158,15 @@ describe('Mock', () => {
             });
 
             describe('布尔值类型', () => {
-                it('以70%的概率生成为true的布尔值', () => {
-                    const template = 'boolean|0.7';
+                it('生成布尔值', () => {
+                    const template = 'boolean';
                     const mockData = mock.template(template);
 
                     expect(typeof mockData).toBe('boolean');
                 });
 
-                it('默认以50%的概率生成布尔值', () => {
-                    const template = 'boolean';
+                it('以70%的概率生成为true的布尔值', () => {
+                    const template = 'boolean|0.7';
                     const mockData = mock.template(template);
 
                     expect(typeof mockData).toBe('boolean');
@@ -224,7 +227,7 @@ describe('Mock', () => {
                         type: 'array',
                         params: {
                             length: 5,
-                            generator: 'number',
+                            generator: generateRandomNumber,
                         },
                     };
                     const mockData = mock.template(template);
@@ -243,7 +246,7 @@ describe('Mock', () => {
                             generator: 123,
                         },
                     };
-                    expect(() => mock.template(template)).toThrowError('Invalid template array');
+                    expect(() => mock.template(template)).toThrowError('Invalid template');
                 });
             });
 
@@ -295,7 +298,7 @@ describe('Mock', () => {
                                 type: 'array',
                                 params: {
                                     length: 5,
-                                    generator: 'number',
+                                    generator: () => Math.random(),
                                 },
                             },
                         },
@@ -316,7 +319,7 @@ describe('Mock', () => {
                     },
                 };
                 // @ts-ignore
-                expect(() => mock.template(template)).toThrowError('Invalid template object');
+                expect(() => mock.template(template)).toThrowError('Invalid template');
             });
         });
 

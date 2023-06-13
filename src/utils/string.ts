@@ -1,25 +1,19 @@
 import { isString } from 'lodash-es';
+import { GenerateRandomStringOptions } from '../types';
+import { DefaultCharPools } from '.';
 
 /**
- *
- * @param pools 完整的字符集
- * @param pool 需要使用的字符集
- * @param length 生成的字符串长度
+ * @description 生成随机字符串
+ * @param {Object} options 参数
  * @returns 随机字符串
  * @example
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, ['number', 'letter'], 10) // 生成10位数字和字母组成的字符串
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, ['number', 'letter']) // 生成10位数字和字母组成的字符串
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, 'number', 10) // 生成10位数字组成的字符串
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, 'letter', 50) // 生成50位字母组成的字符串
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, 'all', 100) // 生成100位数字和字母组成的字符串
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, 'symbol') // 报错, 字符集symbol不存在
- * generateRandomString({ number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, ['symbol']) // 报错, 字符集symbol不存在
+ * generateRandomString({ pools: { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, pool: ['number', 'letter'], length: 10 }) // 生成10位数字和字母组成的字符串
+ * generateRandomString({ pools: { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, pool: 'number'}) // 生成10位数字组成的字符串
+ * generateRandomString({ pools: { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, pool: 'all', length: 100}) // 生成100位数字和字母组成的字符串
+ * generateRandomString({ pools: { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' }, pool: ['symbol'] }) // 报错, 字符集symbol不存在
  */
-export function generateRandomString(
-    pools: Record<string, string>,
-    pool: string | string[] = 'all',
-    length: number = 10,
-): string {
+export function generateRandomString(options: GenerateRandomStringOptions = {}): string {
+    const { pools = DefaultCharPools, pool = 'all', length = 10 } = options;
     let curPool = '';
     let result = '';
 

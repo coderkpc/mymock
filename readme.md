@@ -8,15 +8,13 @@
 
 ### 数字
 
-语法：'number|最小值~最大值.保留几位小数'
+语法：'number|最小值|最大值|保留几位小数'
 
 ```js
-// 生成0-100自然数
-mock.template('number|0|100')
-// 生成0-100的小数 保留小数点后两位
-mock.template('number|0|100|2')
-// 生成-100到0的整数
-mock.template('number|-100|0')
+// 默认生成1-100的自然数
+mock.template('number')
+// 使用模板mock生成1-100的浮点数，保留两位
+mock.template('number|1|100|2')
 ```
 
 ### 字符串
@@ -24,14 +22,12 @@ mock.template('number|-100|0')
 语法：'string|字符串长度|字符集1.字符集2'
 
 ```js
-// 生成10位包括完整字符集的字符串
-mock.template('string|10|all')
-// 生成100位只有小写的字符串
-mock.template('string|100|lower')
-// 生成50位排除小写的字符串
-mock.template('string|50|uppper.symbol.chinese')
-// 生成10位包括中文+标点的字符串
-mock.template('string|50|symbol.chinese')
+// 默认生成长度为10的随机字符串
+mock.template('string')
+// 生成长度为5的随机小写字符串
+mock.template('string|5|lower')
+// 生成50位大写+标点符号的字符串
+mock.template('string|50|uppper.symbol')
 ```
 
 ### 布尔值
@@ -39,10 +35,10 @@ mock.template('string|50|symbol.chinese')
 语法：'boolean|出现true的概率'
 
 ```js
-// 以50%的概率生成true和false
+// 随机布尔值
 mock.template('boolean')
-// 以10%的概率生成true
-mock.template('boolean|0.1')
+// 以70%的概率生成为true的布尔值
+mock.template('boolean|0.7')
 ```
 
 ### 日期
@@ -50,10 +46,10 @@ mock.template('boolean|0.1')
 语法：'date|占位符'
 
 ```js
-// 生成随机日期, 格式为YYYY-MM-DD
+// 默认以YYYY-MM-DD的格式生成随机日期
 mock.template('date')
-// 生成随机日期, 格式为YYYY:MM:DD
-mock.template('date|YYYY:MM:DD')
+// 生成随机日期, 以YYYY/MM/DD的格式生成随机日期
+mock.template('date|YYYY/MM/DD')
 ```
 
 ### 时间
@@ -61,9 +57,9 @@ mock.template('date|YYYY:MM:DD')
 语法：'time|占位符'
 
 ```js
-// 生成随机日期, 格式为hh:mm:ss
+// 默认以hh:mm:ss的格式生成随机时间
 mock.template('time')
-// 生成随机日期, 格式为HH:mm:ss
+// 以HH:mm:ss的格式生成随机时间
 mock.template('time|HH:mm:ss')
 ```
 
@@ -74,13 +70,15 @@ mock.template('time|HH:mm:ss')
 ### 数组
 
 ```js
-// 生成10个0-100自然数
+// 生成5个1-100自然数
 mock.template({
-	type: 'array',
-    generator: 'number|0~100',
-    length: 10
+    type: 'array',
+    params: {
+        length: 5,
+        generator: generateRandomNumber,
+    },
 })
-// 输出 [1,27,12,7,23,89,45,21,76,43]
+// 输出 [12, 3, 64, 45, 98]
 ```
 
 
@@ -90,23 +88,16 @@ mock.template({
 ```js
 // 生成一个对象
 mock.template({
-	type: 'object',
+    type: 'object',
     properties: {
-        name: 'string|10|all'
-        company: {
-        	type: 'object',
-        	properties: {
-        		address: 'string|10|all'
-    		}
-    	}
-    }
+        prop1: 'string|5|lower',
+        prop2: 'number',
+    },
 })
 // 输出
 //{
-//	name: 'dasdqweras',
-//    company: {
-//        address: 'asxzcqwdqwd'
-//    }
+//	prop1: 'dasdqweras',
+//  prop1: 56
 //}
 ```
 

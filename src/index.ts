@@ -1,52 +1,37 @@
-import { isEmpty, isFunction, isInteger, isObject, isString } from 'lodash-es';
-import { MockOptions, NUMBER_TYPE, ParsedArguments } from './types';
-import {
-    generateRandomArray,
-    generateRandomBoolean,
-    generateRandomDate,
-    generateRandomNumber,
-    generateRandomString,
-} from './utils';
+import { isEmpty, isFunction, isObject, isString } from 'lodash-es';
+import { MockOptions } from './types';
+import { DefaultMockFunction, DefaultCharPools, parse } from './utils';
+
+// 亮点
+// 对部分外部的调用传入参数错误的情况进行了校验与提示，做到了异常前置
+// 代码注释较多，容易理解
+// - 场景分析较多，尽可能列举了实际使用中会出现的种种场景
+// - 对部分输入做了参数校验，做到了异常前置
+// - 单测较多，针对正常情况与异常情况都有做覆盖，覆盖率较高
+
+// 问题点
+// 生成随机数时使用 Math.round 进行取舍，导致边界值与中间值的生成概率不一致 √
+// 根据不同的类型调用不同的函数时，使用 switch / if-else 的形式进行串行处理 √
+// 部分函数拆分不够细，如 ParseArgvs 函数中聚合了所有类型的规则解析逻辑，导致针对函数的单测粒度过大 √
+// 单元测试仅针对对外暴露的接口进行测试，忽略了一些内部公用函数的测试 √
+// ts 部分类型定义可以使用工具类型进行简化 √
+// - xmind 的 API 中列出了一些内部的函数，如 parse，仅关注对外的 API 即可 √
+// - demo 中部分语法的描述与给出的例子不一致，如数字类型 √
+// - 单测中部分测试的检验条件有问题，如验证 boolean 生成概率的参数检验条件为生成的内容是否为 boolean √
+// - 部分 API 定义不合理，如数组的生成仅提供了 length 参数指定一个固定的长度，如果需要一个范围内的变长将无法满足
+// - 存在多值化的判断逻辑使用 if-else / switch 进行分发，不利于后续维护 √
 
 class Mock {
-    /**
-     * @private
-     * @description 默认字符集
-     */
-    public CharPools: Record<string, string> = {
-        lower: 'abcdefghijklmnopqrstuvwxyz',
-        upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        number: '0123456789',
-        symbol: '!@#$%^&*()[]',
-    };
-
-    /**
-     * @private
-     * @description mock方法
-     */
-    public mockFunction: Record<string, Function> = {
-        number: generateRandomNumber,
-        string: generateRandomString,
-        boolean: generateRandomBoolean,
-        date: generateRandomDate,
-        time: generateRandomDate,
-        array: generateRandomArray,
-    };
+    public mockFunction: Record<string, Function> = DefaultMockFunction;
+    public charPools: Record<string, string> = DefaultCharPools;
 
     /**
      * @description 扩展默认字符集, 会覆盖已有的字符集
      * @param charPools 字符集
-     * @example
-     * extendCharPools({
-     *    lower: 'abc',
-     *    zh_cn: '中文',
-     * }); // CharPools.lower = 'abc', CharPools.zh_cn = '中文'
+     * @example extendCharPools({ lower: 'abc', zh_cn: '中文', }); // charPools.lower = 'abc', charPools.zh_cn = '中文'
      */
     public extendsCharPools(charPools: Record<string, string>) {
-        this.CharPools = {
-            ...this.CharPools,
-            ...charPools,
-        };
+        Object.assign(this.charPools, charPools);
     }
 
     /**
@@ -55,55 +40,51 @@ class Mock {
      * @param fn 扩展的函数逻辑
      */
     public extend(key: string, fn: Function) {
-        if (isString(key) && typeof fn === 'function') {
-            this.mockFunction[key] = fn;
-        } else {
+        // 判断参数是否合法
+        if (!isString(key) || typeof fn !== 'function') {
             throw new Error('Invalid arguments');
         }
+        this.mockFunction[key] = fn;
     }
 
     /**
-     * @description 解析mock模板的方法
+     * @description 生成基本数据类型的mock数据
      * @param template
-     * @example
-     * parse('number|1-100|2'); // { type: 'number',  params: { min: 1, max: 100, decimalPlaces: 2 } }
-     * parse('string|5|all'); // { type: 'string',  params: { length: 5, pool: 'all' } }
-     * parse('string|5|lower'); // { type: 'string',  params: { length: 5, pool: 'lower' } }
-     * parse('boolean|0.5'); // { type: 'boolean',  params: { prob: 0.5 } }
-     * parse('date|yyyy-MM-dd'); // { type: 'date',  params: { format: 'yyyy-MM-dd' } }
-     * parse('time|HH:mm:ss'); // { type: 'time',  params: { format: 'HH:mm:ss' } }
+     * @returns mock数据
      */
-    public parse(template: string): ParsedArguments {
-        const parsed: ParsedArguments = {
-            type: '',
-            params: {},
-        };
-        const mockFunctions = Object.keys(this.mockFunction);
+    private simple(template: string) {
+        // 生成基本数据类型的mock数据
+        const { type, params } = parse({
+            template,
+            mockFunction: this.mockFunction,
+            pools: this.charPools,
+        });
+        return this.mockFunction[type](params);
+    }
 
-        // 获取类型
-        const [type, param1, param2, param3] = template.split('|');
-        parsed.type = type;
-
-        // 获取参数并设置默认值
-        if (parsed.type === 'number') {
-            parsed.params.min = param1 ? Number(param1) : 1;
-            parsed.params.max = param2 ? Number(param2) : 100;
-            parsed.params.decimalPlaces = param3 ? Number(param3) : 0;
-        } else if (parsed.type === 'string') {
-            parsed.params.length = param1 ? Number(param1) : 1;
-            parsed.params.pool = param2 ? param2.split('.') : 'all';
-        } else if (parsed.type === 'boolean') {
-            parsed.params.prob = param1 ? Number(param1) : 0.5;
-        } else if (parsed.type === 'date') {
-            parsed.params.format = param1 ? param1 : 'YYYY-MM-DD';
-        } else if (parsed.type === 'time') {
-            parsed.params.format = param1 ? param1 : 'hh:mm:ss';
-        } else if (!mockFunctions.includes(parsed.type)) {
-            // 如果解析出的类型既不在默认类型也不在扩展类型中, 则抛出异常
-            throw new Error('Invalid template string');
+    /**
+     * @description 生成复杂数据类型的mock数据
+     * @param template
+     * @returns mock数据
+     */
+    private complex(template: MockOptions) {
+        // 判断数组
+        if (template.type === 'array') {
+            if (!isFunction(template.params.generator)) throw new Error('Invalid template');
+            return this.mockFunction['array']({
+                length: template.params.length,
+                generator: template.params.generator,
+            });
         }
-        // 返回解析好的参数
-        return parsed;
+        // 判断对象
+        if (template.type === 'object' && !isEmpty(template.properties)) {
+            const result: Record<string, any> = {};
+            for (const key in template.properties) {
+                result[key] = this.template(template.properties[key]);
+            }
+            return result;
+        }
+        throw new Error('Invalid template');
     }
 
     /**
@@ -112,58 +93,8 @@ class Mock {
      * @returns mock数据
      */
     public template(template: string | MockOptions) {
-        if (isString(template)) {
-            // 生成基本数据类型的mock数据
-            const parsedArguments = this.parse(template);
-            if (parsedArguments.type === 'number') {
-                return this.mockFunction['number'](
-                    parsedArguments.params.min,
-                    parsedArguments.params.max,
-                    parsedArguments.params.decimalPlaces ? NUMBER_TYPE.float : NUMBER_TYPE.int,
-                    parsedArguments.params.decimalPlaces,
-                );
-            } else if (parsedArguments.type === 'string') {
-                return this.mockFunction['string'](
-                    this.CharPools,
-                    parsedArguments.params.pool,
-                    parsedArguments.params.length,
-                );
-            } else if (parsedArguments.type === 'boolean') {
-                return this.mockFunction['boolean'](parsedArguments.params.prob);
-            } else if (parsedArguments.type === 'date') {
-                return this.mockFunction['date'](parsedArguments.params.format);
-            } else if (parsedArguments.type === 'time') {
-                return this.mockFunction['time'](parsedArguments.params.format);
-            } else if (this.mockFunction[parsedArguments.type]) {
-                return this.mockFunction[parsedArguments.type]();
-            }
-        } else if (isObject(template)) {
-            // 生成复杂数据类型的mock数据
-            // 判断数组
-            if (template.type === 'array' && isInteger(template.params.length) && template.params.length) {
-                // 如果构造器是函数, 则调用
-                if (isFunction(template.params.generator)) {
-                    return this.mockFunction['array'](template.params.length, template.params.generator);
-                } else if (isString(template.params.generator)) {
-                    // 如果构造器是模板, 则递归解析
-                    const result: any[] = [];
-                    for (let i = 0; i < template.params.length; i++) {
-                        result.push(this.template(template.params.generator));
-                    }
-                    return result;
-                }
-                throw new Error('Invalid template array');
-            }
-            // 判断对象
-            else if (template.type === 'object' && !isEmpty(template.properties)) {
-                const result: Record<string, any> = {};
-                for (const key in template.properties) {
-                    result[key] = this.template(template.properties[key]);
-                }
-                return result;
-            }
-            throw new Error('Invalid template object');
-        }
+        if (isString(template)) return this.simple(template);
+        if (isObject(template)) return this.complex(template);
         throw new Error('Invalid template');
     }
 }

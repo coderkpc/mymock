@@ -1,89 +1,65 @@
 import { generateRandomChar, generateRandomString } from '../src/utils/string';
 import { describe, it, expect } from 'vitest';
 
-describe('generateRandomChar', () => {
-    it('should generate a random character from the specified character pool', () => {
-        const charPool = '1234567890';
+describe('生成随机字符', () => {
+    it('生成随机字符', () => {
+        const charPool = '1234567890asdqwxcqdqwdfgdL:"><?';
         const result = generateRandomChar(charPool);
 
         expect(result).toHaveLength(1);
         expect(charPool.includes(result)).toBeTruthy();
     });
 
-    it('should generate a random character from the specified character pool', () => {
-        const charPool = 'abcdefghijklmnopqrstuvwxyz';
-        const result = generateRandomChar(charPool);
-
-        expect(result).toHaveLength(1);
-        expect(charPool.includes(result)).toBeTruthy();
-    });
-
-    it('should generate a random character from the specified character pool', () => {
-        const charPool = 'abcdefghijklmnopqrstuvwxyz1234567890';
-        const result = generateRandomChar(charPool);
-
-        expect(result).toHaveLength(1);
-        expect(charPool.includes(result)).toBeTruthy();
-    });
-
-    it('should throw an error for an empty character pool', () => {
+    it('生成字符时传入空字符串，抛出异常', () => {
         expect(() => generateRandomChar('')).toThrow('字符集不能为空');
     });
 
-    it('should throw an error for a non-string character pool', () => {
+    it('生成字符时传入非字符串的参数，抛出异常', () => {
         //@ts-ignore
         expect(() => generateRandomChar(123)).toThrow('字符集必须是字符串');
     });
 });
 
-describe('generateRandomString', () => {
-    it('should generate a random string with the specified character pools and length', () => {
+describe('生成随机字符串', () => {
+    it('生成100位包括数字+小写字母的随机字符串', () => {
         const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
-        const result = generateRandomString(pools, ['number', 'letter'], 10);
+        const result = generateRandomString({
+            pools,
+            pool: ['number', 'letter'],
+            length: 100,
+        });
 
-        expect(result).toHaveLength(10);
-        expect(result).toMatch(/^[0-9a-z]+$/);
-    });
-
-    it('should generate a random string with the specified character pools and default length', () => {
-        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
-        const result = generateRandomString(pools, ['number', 'letter']);
-
-        expect(result).toHaveLength(10);
-        expect(result).toMatch(/^[0-9a-z]+$/);
-    });
-
-    it('should generate a random string with the specified character pool and length', () => {
-        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
-        const result = generateRandomString(pools, 'number', 10);
-
-        expect(result).toHaveLength(10);
-        expect(result).toMatch(/^[0-9]+$/);
-    });
-
-    it('should generate a random string with the specified character pool and length', () => {
-        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
-        const result = generateRandomString(pools, 'letter', 50);
-        expect(result).toHaveLength(50);
-        expect(result).toMatch(/^[a-z]+$/);
-    });
-
-    it('should generate a random string with all character pools and length', () => {
-        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
-        const result = generateRandomString(pools, 'all', 100);
         expect(result).toHaveLength(100);
         expect(result).toMatch(/^[0-9a-z]+$/);
     });
 
-    it('should throw an error for an invalid character pool', () => {
+    it('生成包括小写字母的随机字符串，不传长度默认生成10位', () => {
         const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
+        const result = generateRandomString({
+            pools,
+            pool: 'letter',
+        });
 
-        expect(() => generateRandomString(pools, 'symbol')).toThrow('字符集symbol不存在');
+        expect(result).toHaveLength(10);
+        expect(result).toMatch(/^[0-9a-z]+$/);
     });
 
-    it('should throw an error for an invalid character pool in an array', () => {
+    it('生成包括所有给定字符集内容的字符串，长度100位', () => {
+        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
+        const result = generateRandomString({ pools, pool: 'all', length: 100 });
+        expect(result).toHaveLength(100);
+        expect(result).toMatch(/^[0-9a-z]+$/);
+    });
+
+    it('使用不存在的字符集生成字符串，抛出异常', () => {
         const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
 
-        expect(() => generateRandomString(pools, ['symbol'])).toThrow('字符集symbol不存在');
+        expect(() => generateRandomString({ pools, pool: 'symbol' })).toThrow('字符集symbol不存在');
+    });
+
+    it('使用不存在的多个字符集生成字符串，抛出异常', () => {
+        const pools = { number: '0123456789', letter: 'abcdefghijklmnopqrstuvwxyz' };
+
+        expect(() => generateRandomString({ pools, pool: ['symbol', 'zh_CN'] })).toThrow('字符集symbol不存在');
     });
 });
