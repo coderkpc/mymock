@@ -1,5 +1,11 @@
+/*
+ * @Date: 2023-06-10 09:28:06
+ * @LastEditors: Perfecto kepengcheng314@163.com
+ * @LastEditTime: 2023-06-17 15:18:18
+ */
 import { isInteger, isNumber } from 'lodash-es';
 import { GenerateRandomFloatOptions, GenerateRandomIntegerOptions, GenerateRandomNumberOptions } from '../types';
+import { validateType } from './validate';
 
 /**
  * @description 生成随机数
@@ -29,8 +35,8 @@ export function generateRandomNumber(options: GenerateRandomNumberOptions = {}):
  */
 export function generateRandomInteger({ min, max }: GenerateRandomIntegerOptions): number {
     if (min >= max) throw new Error('最小值不能大于等于最大值');
-    if (!isNumber(min) || !isNumber(max)) throw new Error('最小值和最大值必须是数字');
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    validateType('number', min, max);
+    return Math.floor(Math.random() * (max - min)) + min;
 }
 
 /**
@@ -41,9 +47,11 @@ export function generateRandomInteger({ min, max }: GenerateRandomIntegerOptions
  * generateRandomFloat({ min: 100, max: 200, decimalPlaces: 10}) // 生成100-200随机小数, 精确到10位小数
  */
 export function generateRandomFloat({ min, max, decimalPlaces }: GenerateRandomFloatOptions): number {
+    validateType('number', min, max);
     if (min >= max) throw new Error('最小值不能大于等于最大值');
-    if (!isNumber(min) || !isNumber(max)) throw new Error('最小值和最大值必须是数字');
-    if (!isInteger(decimalPlaces) && decimalPlaces >= 0) throw new Error('小数位数必须是大于等于0的整数');
+    validateType('integer', decimalPlaces);
+    if (decimalPlaces < 0) throw new Error('小数位数必须大于等于0');
+
     const random = Math.random() * (max - min) + min;
     return parseFloat(random.toFixed(decimalPlaces));
 }

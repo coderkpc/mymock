@@ -22,9 +22,9 @@ describe('生成随机布尔值', () => {
     });
 
     it('传入大于1或小于0的数字、字符串，抛出异常', () => {
-        expect(() => generateRandomBoolean({ prob: -0.5 })).toThrowError('概率必须是0-1之间的数字');
-        expect(() => generateRandomBoolean({ prob: 1.5 })).toThrowError('概率必须是0-1之间的数字');
+        expect(() => generateRandomBoolean({ prob: -0.5 })).toThrowError('概率必须处于是0到1之间');
+        expect(() => generateRandomBoolean({ prob: 1.5 })).toThrowError('概率必须处于是0到1之间');
         // @ts-ignore
-        expect(() => generateRandomBoolean({ prob: '0.5' })).toThrowError('概率必须是0-1之间的数字');
+        expect(() => generateRandomBoolean({ prob: '0.5' })).toThrowError('参数0.5不是number类型');
     });
 });

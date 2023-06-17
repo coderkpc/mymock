@@ -1,7 +1,16 @@
+/*
+ * @Date: 2023-06-10 09:28:06
+ * @LastEditors: Perfecto kepengcheng314@163.com
+ * @LastEditTime: 2023-06-17 14:55:36
+ */
 import { generateRandomChar, generateRandomString } from '../src/utils/string';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 
 describe('生成随机字符', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('生成随机字符', () => {
         const charPool = '1234567890asdqwxcqdqwdfgdL:"><?';
         const result = generateRandomChar(charPool);
@@ -10,13 +19,23 @@ describe('生成随机字符', () => {
         expect(charPool.includes(result)).toBeTruthy();
     });
 
+    it('生成字符集的第一个和最后一个字符', () => {
+        const charPool = '1234567890';
+
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        expect(generateRandomChar(charPool)).toBe('1');
+
+        vi.spyOn(Math, 'random').mockReturnValue(0.999999999999999999999);
+        expect(generateRandomChar(charPool)).toBe('0');
+    });
+
     it('生成字符时传入空字符串，抛出异常', () => {
         expect(() => generateRandomChar('')).toThrow('字符集不能为空');
     });
 
     it('生成字符时传入非字符串的参数，抛出异常', () => {
         //@ts-ignore
-        expect(() => generateRandomChar(123)).toThrow('字符集必须是字符串');
+        expect(() => generateRandomChar(123)).toThrow('参数123不是string类型');
     });
 });
 

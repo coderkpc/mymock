@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { GenerateRandomDateOptions } from '../types';
 
 /**
- * @description 生成随机日期
+ * @description 生成随机日期, 范围1970-01-01到2023-12-31
  * @param {Object} options 参数
  * @returns 随机日期字符串
  * @example
@@ -13,7 +13,9 @@ export function generateRandomDate(options: GenerateRandomDateOptions = {}): str
     const { format = 'YYYY-MM-DD' } = options;
 
     const currentDate = dayjs();
-    const randomYear = Math.floor(Math.random() * 10) + currentDate.year() - 5;
+
+    // 1970-2023
+    const randomYear = Math.floor(Math.random() * (currentDate.year() - 1969)) + 1970;
     const randomMonth = Math.floor(Math.random() * 12) + 1;
     const randomDay = Math.floor(Math.random() * 31) + 1;
     const randomDate = dayjs(`${randomYear}-${randomMonth}-${randomDay}`);

@@ -1,3 +1,8 @@
+/*
+ * @Date: 2023-06-17 00:32:40
+ * @LastEditors: Perfecto kepengcheng314@163.com
+ * @LastEditTime: 2023-06-17 11:51:47
+ */
 import { ParsedArguments, ParseOptions } from '../types';
 
 /**
@@ -12,42 +17,19 @@ import { ParsedArguments, ParseOptions } from '../types';
 function getParams(options: ParseOptions) {
     const { template, mockFunction } = options;
     const mockFunctions = Object.keys(mockFunction);
-    const [type, param1, param2, param3] = template.split('|');
+    const [type] = template.split('|');
 
-    const parseRules: Record<string, Function> = {
-        number: () => {
-            return {
-                min: param1 ? Number(param1) : 1,
-                max: param2 ? Number(param2) : 100,
-                decimalPlaces: param3 ? Number(param3) : 0,
-            };
-        },
-        string: () => {
-            return {
-                length: param1 ? Number(param1) : 1,
-                pool: param2 ? param2.split('.') : 'all',
-            };
-        },
-        boolean: () => {
-            return {
-                prob: param1 ? Number(param1) : 0.5,
-            };
-        },
-        date: () => {
-            return {
-                format: param1 ? param1 : 'YYYY-MM-DD',
-            };
-        },
-        time: () => {
-            return {
-                format: param1 ? param1 : 'hh:mm:ss',
-            };
-        },
+    const parseRules: Record<string, (template: string) => any> = {
+        number: getNumberParams,
+        string: getStringParams,
+        boolean: getBooleanParams,
+        date: getDateTimeParams,
+        time: getDateTimeParams,
     };
 
     if (!Object.keys(parseRules).includes(type) && !mockFunctions.includes(type)) {
         // 如果解析出的类型既不在默认类型也不在扩展类型中, 则抛出异常
-        throw new Error('Invalid template string');
+        throw new Error('模板解析错误');
     }
     return parseRules[type] ? parseRules[type](template) : {};
 }
@@ -77,4 +59,35 @@ export function parse(options: ParseOptions): ParsedArguments {
     parsed.params = getParams(options);
     // 返回解析好的参数
     return parsed;
+}
+
+export function getNumberParams(template: string) {
+    const [_, min, max, decimalPlaces] = template.split('|');
+    return {
+        min: min ? Number(min) : 1,
+        max: max ? Number(max) : 100,
+        decimalPlaces: decimalPlaces ? Number(decimalPlaces) : 0,
+    };
+}
+
+export function getStringParams(template: string) {
+    const [_, length, pool] = template.split('|');
+    return {
+        length: length ? Number(length) : 1,
+        pool: pool ? pool.split('.') : 'all',
+    };
+}
+export function getBooleanParams(template: string) {
+    const [_, prob] = template.split('|');
+    return {
+        prob: prob ? Number(prob) : 0.5,
+    };
+}
+export function getDateTimeParams(template: string) {
+    const [type, param1] = template.split('|');
+    const defaultFormat = type === 'date' ? 'YYYY-MM-DD' : 'hh:mm:ss';
+
+    return {
+        format: param1 ? param1 : defaultFormat,
+    };
 }

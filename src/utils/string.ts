@@ -1,6 +1,7 @@
 import { isString } from 'lodash-es';
 import { GenerateRandomStringOptions } from '../types';
 import { DefaultCharPools } from '.';
+import { validateType } from './validate';
 
 /**
  * @description 生成随机字符串
@@ -52,11 +53,11 @@ export function generateRandomString(options: GenerateRandomStringOptions = {}):
  * generateRandomChar('abcdefghijklmnopqrstuvwxyz') // 生成a-z的一个随机字符
  * generateRandomChar('abcdefghijklmnopqrstuvwxyz1234567890') // 生成a-z和0-9的一个随机字符
  * generateRandomChar('') // 报错，字符集不能为空
- * generateRandomChar(123) // 报错，字符集必须是字符串
+ * generateRandomChar(123) // 报错，参数123不是string类型
  */
 export function generateRandomChar(charPool: string): string {
-    if (!isString(charPool)) throw new Error('字符集必须是字符串');
+    validateType('string', charPool);
     if (charPool.length === 0) throw new Error('字符集不能为空');
 
-    return charPool.charAt(Math.floor(Math.random() * charPool.length));
+    return charPool.charAt(Math.floor(Math.random() * (charPool.length - 1)));
 }

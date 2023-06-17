@@ -38,7 +38,7 @@ describe('Mock', () => {
 
         it('扩展mock方法时传入非法参数', () => {
             // @ts-ignore
-            expect(() => mock.extend('custom', 'invalid')).toThrowError('Invalid arguments');
+            expect(() => mock.extend('custom', 'invalid')).toThrowError('参数invalid不是function类型');
         });
 
         it('调用扩展后的mock方法', () => {
@@ -117,7 +117,7 @@ describe('Mock', () => {
         it('解析模板时传入非法模板', () => {
             const template = 'invalid|template';
             expect(() => parse({ template, mockFunction: DefaultMockFunction, pools: DefaultCharPools })).toThrowError(
-                'Invalid template',
+                '模板解析错误',
             );
         });
     });
@@ -246,7 +246,7 @@ describe('Mock', () => {
                             generator: 123,
                         },
                     };
-                    expect(() => mock.template(template)).toThrowError('Invalid template');
+                    expect(() => mock.template(template)).toThrowError('参数123不是function类型');
                 });
             });
 
@@ -319,14 +319,30 @@ describe('Mock', () => {
                     },
                 };
                 // @ts-ignore
-                expect(() => mock.template(template)).toThrowError('Invalid template');
+                expect(() => mock.template(template)).toThrowError('模板解析错误');
             });
         });
 
         it('模板调用时传入非法参数', () => {
             const template = 123;
             // @ts-ignore
-            expect(() => mock.template(template)).toThrowError('Invalid template');
+            expect(() => mock.template(template)).toThrowError('模板解析错误');
+        });
+    });
+
+    describe('根据模板大量生成数据', () => {
+        it('生成100次1到100随机自然数', () => {
+            const template = 'number';
+            const mockData = mock.templateRepeat(template, 100);
+            expect(mockData.length).toBe(100);
+
+            expect(mockData.every(item => isInteger(item))).toBe(true);
+            expect(mockData.every(item => item >= 1 && item <= 100)).toBe(true);
+        });
+        it('传入非法参数, 抛出异常', () => {
+            const template = 'number';
+            // @ts-ignore
+            expect(() => mock.templateRepeat(template, '100')).toThrowError('参数100不是number类型');
         });
     });
 });

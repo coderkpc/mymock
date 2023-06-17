@@ -1,5 +1,5 @@
-import { isNumber } from 'lodash-es';
 import { GenerateRandomBooleanOptions } from '../types';
+import { validateType } from './validate';
 
 /**
  * @description 生成随机布尔值
@@ -11,6 +11,7 @@ import { GenerateRandomBooleanOptions } from '../types';
  */
 export function generateRandomBoolean(options: GenerateRandomBooleanOptions = {}) {
     const { prob = 0.5 } = options;
-    if (!isNumber(prob) || prob < 0 || prob > 1) throw new Error('概率必须是0-1之间的数字');
+    validateType('number', prob);
+    if (prob < 0 || prob > 1) throw new Error('概率必须处于是0到1之间');
     return Math.random() < prob;
 }

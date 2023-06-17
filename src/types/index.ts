@@ -11,20 +11,22 @@ export interface ParseOptions {
     pools: Record<string, string>;
 }
 
-export type MockOptions =
-    | {
-          type: 'object';
-          properties: {
-              [key: string]: string | MockOptions;
-          };
-      }
-    | {
-          type: 'array';
-          params: {
-              generator: Function | string;
-              length: number;
-          };
-      };
+export type MockObejctOptions = {
+    type: 'object';
+    properties: {
+        [key: string]: string | MockOptions;
+    };
+};
+
+export type MockArrayOptions = {
+    type: 'array';
+    params: {
+        generator: Function | string;
+        length: number;
+    };
+};
+
+export type MockOptions = MockArrayOptions | MockObejctOptions;
 
 export interface GenerateRandomNumberOptions {
     min?: number;
@@ -62,4 +64,10 @@ export interface GenerateRandomTimeOptions {
 export interface GenerateRandomArrayOptions {
     length: number;
     generator: () => any;
+}
+
+export interface GenerateDataOptions<T = string> {
+    template: T;
+    mockFunction: Record<string, Function>;
+    charPools: Record<string, string>;
 }
